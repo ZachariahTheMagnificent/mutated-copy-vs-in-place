@@ -1,33 +1,28 @@
 //#define MUTATE_IN_PLACE
-//#define MULTITHREADING
 
 #include <iostream>
 #include <vector>
 #include <random>
 #include <chrono>
-#if defined MULTITHREADING
-#include <thread>
-#endif
 #include <mutated-copy-vs-in-place/statistics.hpp>
 using zachariahs_world::math::statistics_type;
 using zachariahs_world::math::get_statistics;
 
-class base { };
-class derived: public base {
-
-};
-
 template<typename iterator>
-void quick_sort(const iterator begin, const iterator end) {
-	if (begin == end) {
+void quick_sort(const iterator begin, const iterator end)
+{
+	if (begin == end)
+	{
 		return;
 	}
 
 	auto middle = *begin;
 	auto lower_end = begin + 1;
 
-	for ( auto it = begin + 1; it != end; ++it ) {
-		if ( *it < middle ) {
+	for ( auto it = begin + 1; it != end; ++it )
+	{
+		if ( *it < middle )
+		{
 			std::swap ( *lower_end, *it );
 			++lower_end;
 		}
@@ -41,18 +36,21 @@ void quick_sort(const iterator begin, const iterator end) {
 
 #if defined MUTATE_IN_PLACE
 template<typename type>
-void quick_sort ( std::vector<type>& vector ) {
+void quick_sort ( std::vector<type>& vector )
+{
 	quick_sort ( vector.begin ( ), vector.end ( ) );
 }
 #else
 template<typename type>
-std::vector<type> quick_sort ( std::vector<type> vector ) {
+std::vector<type> quick_sort ( std::vector<type> vector )
+{
 	quick_sort ( vector.begin ( ), vector.end ( ) );
 	return vector;
 }
 #endif
 
-int main ( ) {
+int main ( )
+{
 	constexpr auto num_tests = 1000;
 	constexpr auto num_ints = 1'000;
 	constexpr auto num_frames = 1000;
@@ -62,49 +60,30 @@ int main ( ) {
 	using clock = std::chrono::steady_clock;
 
 	std::cout << "Mutate copy vs mutate in place benchmark test\n";
-	std::system ( "pause" );
 	std::cout << '\n';
 
-	auto test = [ lowest_int, highest_int, num_ints, num_frames ] {
-#if defined MULTITHREADING
-		auto process_jobs = [ lowest_int, highest_int, num_ints, num_frames ]
-#endif
+	auto test = [ lowest_int, highest_int, num_ints, num_frames ]
+	{
+		auto rng_machine = std::mt19937 { };
+		const auto int_generator = std::uniform_int_distribution<int> { lowest_int, highest_int };
+		auto original_ints = std::vector<int> { };
+		original_ints.reserve ( num_ints );
+
+		for ( auto index = std::size_t { }; index < num_ints; ++index ) 
 		{
-			auto rng_machine = std::mt19937 { };
-			const auto int_generator = std::uniform_int_distribution<int> { lowest_int, highest_int };
-			auto original_ints = std::vector<int> { };
-			original_ints.reserve ( num_ints );
+			original_ints.push_back ( int_generator ( rng_machine ) );
+		}
+		std::vector<int> results;
 
-			for ( auto index = std::size_t { }; index < num_ints; ++index ) {
-				original_ints.push_back ( int_generator ( rng_machine ) );
-			}
-			std::vector<int> results;
-
-			for ( auto index = std::size_t { }; index < num_frames; ++index ) {
+		for ( auto index = std::size_t { }; index < num_frames; ++index )
+		{
 
 #if defined MUTATE_IN_PLACE
-				quick_sort ( ints );
+			quick_sort ( original_ints );
 #else
-				auto results = quick_sort ( original_ints );
+			auto results = quick_sort ( original_ints );
 #endif
-			}
 		}
-#if defined MULTITHREADING
-		;
-
-		const auto num_threads = std::thread::hardware_concurrency ( );
-
-		std::vector<std::thread> threads;
-		threads.reserve ( num_threads - 1 );
-		for ( auto index = std::size_t { }; index < num_threads - 1; ++index ) {
-			threads.emplace_back ( process_jobs );
-		}
-		process_jobs ( );
-
-		for ( auto& thread : threads ) {
-			thread.join ( );
-		}
-#endif
 	};
 
 	auto data_points = std::vector<unsigned long long> { };
@@ -112,7 +91,8 @@ int main ( ) {
 	// Warmup
 	test ( );
 
-	for ( auto index = std::size_t { }; index < num_tests; ++index ) {
+	for ( auto index = std::size_t { }; index < num_tests; ++index )
+	{
 		// Beginning of benchmark
 		auto start = clock::now ( );
 		test ( );
@@ -126,13 +106,12 @@ int main ( ) {
 	}
 
 	const auto statistics = get_statistics ( data_points );
-	std::cout << "Programmed with: "
-#if defined _WIN64
-		<< "[_WIN64]"
-#endif
-#if defined MULTITHREADING
-		<< "[MULTITHREADING]"
-#endif
+	std::cout << "Programmed with: ";
+	if constexpr (sizeof(void*) == 8)
+	{
+		std::cout << "[x64]";
+	}
+	std::cout
 #if defined MUTATE_IN_PLACE
 		<< "[MUTATE_IN_PLACE]"
 #endif
