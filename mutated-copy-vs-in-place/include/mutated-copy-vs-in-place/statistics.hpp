@@ -7,10 +7,20 @@ namespace zachariahs_world
 	namespace math
 	{
 		template<typename num_type>
-		struct statistics_type
+		struct Statistics
 		{
-			statistics_type ( ) = default;
-			constexpr explicit statistics_type ( const num_type lowest, const num_type highest, const num_type median, const num_type mean, const num_type standard_deviation ) noexcept : lowest { lowest },
+			Statistics ( ) = default;
+			constexpr explicit Statistics
+			(
+				const num_type lowest,
+				const num_type highest,
+				const num_type median,
+				const num_type mean,
+				const num_type standard_deviation
+			)
+			noexcept
+			:
+				lowest { lowest },
 				highest { highest },
 				median { median },
 				mean { mean },
@@ -48,7 +58,7 @@ namespace zachariahs_world
 				return total + difference * difference;
 			} ) / size ) );
 
-			return statistics_type {
+			return Statistics {
 				lowest,
 				highest,
 				median,

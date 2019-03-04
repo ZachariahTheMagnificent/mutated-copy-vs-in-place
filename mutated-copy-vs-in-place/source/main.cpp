@@ -5,7 +5,7 @@
 #include <random>
 #include <chrono>
 #include <mutated-copy-vs-in-place/statistics.hpp>
-using zachariahs_world::math::statistics_type;
+using zachariahs_world::math::Statistics;
 using zachariahs_world::math::get_statistics;
 
 template<typename iterator>
